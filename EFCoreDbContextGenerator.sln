@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33502.453
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EFCoreDbContextGenerator", "EFCoreDbContextGenerator\EFCoreDbContextGenerator.csproj", "{D1FD0A51-1FB3-4188-BC93-D508ABF498DD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EFCoreDbContextGen", "EFCoreDbContextGenerator\EFCoreDbContextGen.csproj", "{D1FD0A51-1FB3-4188-BC93-D508ABF498DD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EFCoreDbContextGenerator.CLITest", "EFCoreDbContextGenerator.CLITest\EFCoreDbContextGenerator.CLITest.csproj", "{4F4B54C9-CAAD-4D45-9E4B-43C9757EA118}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{D1FD0A51-1FB3-4188-BC93-D508ABF498DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D1FD0A51-1FB3-4188-BC93-D508ABF498DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D1FD0A51-1FB3-4188-BC93-D508ABF498DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F4B54C9-CAAD-4D45-9E4B-43C9757EA118}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F4B54C9-CAAD-4D45-9E4B-43C9757EA118}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F4B54C9-CAAD-4D45-9E4B-43C9757EA118}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F4B54C9-CAAD-4D45-9E4B-43C9757EA118}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
