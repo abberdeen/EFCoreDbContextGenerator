@@ -5,4 +5,4 @@ Console.ReadLine();
 /// > dotnet restore
 /// > dotnet build
 /// > cd EFCoreDbContextGenerator.CLITest
-/// >  ..\EFCoreDbContextGenerator\bin\Debug\net7.0\EFCoreDbContextGen.exe -f=Models
+/// > ..\EFCoreDbContextGenerator\bin\Debug\net7.0\EFCoreDbContextGen.exe -folder=Models -file=MyDbContext

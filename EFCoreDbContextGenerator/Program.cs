@@ -1,4 +1,12 @@
-﻿// Generate DBContext class automatically from Models folder
+﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis;
+using System.Text;
+using System.Globalization;
+using Humanizer;
+
+
+// Generate DBContext class automatically from Models folder
 
 /// How to test?
 /// > dotnet restore
@@ -8,23 +16,19 @@
 /// 
 /// To use you can also just copy EFCoreDbContextGen.exe to your models folder and just run
 
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis;
-using System.Text;
-
 string modelsFolder = null;
 string dbContextFileName = "AppDbContext";
+
 foreach (string arg in args)
 {
-    if (arg.StartsWith("-f="))
+    if (arg.StartsWith("-folder="))
     {
-        modelsFolder = arg.Substring(3);
+        modelsFolder = arg.Substring(8);
     }
 
-    if (arg.StartsWith("-n="))
+    if (arg.StartsWith("-file="))
     {
-        dbContextFileName = arg.Substring(3);
+        dbContextFileName = arg.Substring(6);
     }
 }
 
@@ -44,45 +48,57 @@ if (!Directory.Exists(modelsFolder))
 
 Console.WriteLine($"Models folder located at: {modelsFolder}");
 
+DbContextGen.GenerateDbContextFile(modelsFolder, dbContextFileName);
 
-var models = new List<string>();
-foreach (string file in Directory.EnumerateFiles(modelsFolder, "*.cs")) 
+#region Core
+public static class DbContextGen
 {
-    if (file.ToLower().EndsWith("dbcontext.cs")) 
+    public static void GenerateDbContextFile(string modelsFolder, string dbContextFileName)
     {
-        continue;
+        var models = new List<string>();
+        foreach (string file in Directory.EnumerateFiles(modelsFolder, "*.cs"))
+        {
+            if (file.ToLower().EndsWith("dbcontext.cs"))
+            {
+                continue;
+            }
+
+            Console.WriteLine(file);
+            var code = File.ReadAllText(file);
+            var publicClasses = GetListOfPublicClasses(code);
+            models.AddRange(publicClasses);
+        }
+
+        if (models.Count == 0)
+        {
+            Console.WriteLine("No nodels found");
+            Environment.Exit(2);
+        }
+
+        var content = GetDbContextContent(dbContextFileName, models);
+        var dbContextFilePath = Path.Combine(modelsFolder, $"{dbContextFileName}.cs");
+        
+        if (File.Exists(dbContextFilePath))
+        {
+            Console.WriteLine("DbContext file allread exists. Do you want replace? y/n");
+            if (Console.ReadLine() != "y")
+            {
+                Environment.Exit(3);
+            }
+
+            File.Delete(dbContextFilePath);
+        }
+
+        File.WriteAllText(dbContextFilePath, content);
     }
 
-    Console.WriteLine(file);
-    var code = File.ReadAllText(file);
-    var publicClasses = GetListOfPublicClasses(code);
-    models.AddRange(publicClasses);
-}
-
-if (models.Count == 0) 
-{
-    Console.WriteLine("No nodels found");
-    Environment.Exit(2);
-}
-
-var content = GetDbContextContent(dbContextFileName, models);
-var dbContextFilePath = Path.Combine(modelsFolder, $"{dbContextFileName}.cs");
-if (File.Exists(dbContextFilePath))
-{
-    Console.WriteLine("DbContext file allread exists");
-    Environment.Exit(3);
-}
-
-File.WriteAllText(dbContextFilePath, content);
-#region Core
-
-string GetDbContextContent(string dbContextName, List<string> models)
-{
-    var content = new StringBuilder();
-    content.AppendLine($"public class {dbContextName} : DbContext");
-    content.AppendLine("{");
-    content.AppendLine($"\tpublic {dbContextName}()");
-    content.Append(@"
+    static string GetDbContextContent(string dbContextName, List<string> models)
+    {
+        var content = new StringBuilder();
+        content.AppendLine($"public class {dbContextName} : DbContext");
+        content.AppendLine("{");
+        content.AppendLine($"\tpublic {dbContextName}()");
+        content.Append(@"
     {
   
     }
@@ -97,31 +113,32 @@ string GetDbContextContent(string dbContextName, List<string> models)
     
 ");
 
-    foreach (var item in models)
-    {
-        content.AppendLine($"\tpublic DbSet<{item}> {item} {{ get; set; }}");
-    } 
-
-    content.AppendLine("}");
-    return content.ToString();
-}
-
-List<string> GetListOfPublicClasses (string code)
-{
-    SyntaxTree tree = CSharpSyntaxTree.ParseText(code);
-    SyntaxNode root = tree.GetCompilationUnitRoot();
-
-    IEnumerable<ClassDeclarationSyntax> classes = root.DescendantNodes().OfType<ClassDeclarationSyntax>();
-
-    var publicClasses = new List<string>();
-    foreach (ClassDeclarationSyntax classDeclaration in classes)
-    {
-        if (classDeclaration.Modifiers.Any(x => x.ValueText == "public"))
+        foreach (var item in models)
         {
-            publicClasses.Add(classDeclaration.Identifier.ValueText); 
+            content.AppendLine($"\tpublic DbSet<{item}> {item.Pluralize()} {{ get; set; }}");
         }
-    }
-    return publicClasses;
-}
 
+        content.AppendLine("}");
+        return content.ToString();
+    }
+
+    static List<string> GetListOfPublicClasses(string code)
+    {
+        SyntaxTree tree = CSharpSyntaxTree.ParseText(code);
+        SyntaxNode root = tree.GetCompilationUnitRoot();
+
+        IEnumerable<ClassDeclarationSyntax> classes = root.DescendantNodes().OfType<ClassDeclarationSyntax>();
+
+        var publicClasses = new List<string>();
+        foreach (ClassDeclarationSyntax classDeclaration in classes)
+        {
+            if (classDeclaration.Modifiers.Any(x => x.ValueText == "public"))
+            {
+                publicClasses.Add(classDeclaration.Identifier.ValueText);
+            }
+        }
+        return publicClasses;
+    }
+
+}
 #endregion
